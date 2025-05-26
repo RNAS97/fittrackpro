@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>FitTrack Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    const muscleExercises = {
+      gogus: ["Bench Press", "Incline Dumbbell Press", "Chest Fly", "Cable Crossover", "Push-Ups", "Decline Press", "Machine Press", "Dips", "Squeeze Press", "Smith Machine Press"],
+      sirt: ["Pull-Up", "Lat Pulldown", "Barbell Row", "T-Bar Row", "Seated Row", "Deadlift", "Dumbbell Row", "Face Pull", "Straight Arm Pulldown", "Chin-Up"],
+      omuz: ["Shoulder Press", "Lateral Raise", "Front Raise", "Rear Delt Fly", "Arnold Press", "Cable Lateral Raise", "Upright Row", "Dumbbell Press", "Face Pull", "Machine Shoulder Press"],
+      biceps: ["Barbell Curl", "Dumbbell Curl", "Hammer Curl", "Preacher Curl", "Concentration Curl", "Cable Curl", "Zottman Curl", "Incline Curl", "Reverse Curl", "EZ Bar Curl"],
+      triceps: ["Skullcrusher", "Triceps Pushdown", "Overhead Extension", "Dips", "Close-Grip Bench", "Kickbacks", "Rope Extension", "One Arm Pushdown", "Diamond Push-Up", "Machine Triceps Press"],
+      bacak: ["Squat", "Leg Press", "Lunges", "Leg Curl", "Leg Extension", "Bulgarian Split Squat", "Romanian Deadlift", "Glute Bridge", "Calf Raise", "Hack Squat"],
+      karin: ["Crunch", "Plank", "Leg Raise", "Bicycle Crunch", "Russian Twist", "Hanging Leg Raise", "Cable Crunch", "Mountain Climber", "Ab Wheel Rollout", "Toe Touch"]
+    };
+
+    function generateWorkout() {
+      const group = document.getElementById("muscleGroup").value;
+      const level = document.getElementById("workoutLevel").value;
+      const planList = document.getElementById("workoutPlan");
+
+      if (!group || !level) return;
+
+      const moves = muscleExercises[group];
+      let moveCount = level === "hafif" ? 4 : level === "orta" ? 6 : level === "pro" ? 8 : 6;
+      let setRep = level === "hafif" ? "3x15" : level === "orta" ? "4x10-12" : level === "pro" ? "5x6-10" : "3-5 set / 6-15 tekrar";
+
+      planList.innerHTML = "";
+      for (let i = 0; i < moveCount; i++) {
+        const li = document.createElement("li");
+        li.textContent = `${moves[i]} - ${setRep}`;
+        planList.appendChild(li);
+      }
+    }
+    
+    function resetUser() {
+      if (confirm("Tüm veriler silinecek. Emin misiniz?")) {
+        localStorage.removeItem("prData");
+        localStorage.removeItem("workoutCalendarV2");
+        location.reload();
+      }
+    }
+
+</script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+    .card {
+      background-color: #fff;
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    h2 {
+      font-size: 22px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 10px;
+      display: block;
+    }
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .input-group img {
+      width: 32px;
+      height: auto;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      max-width: 300px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      background-color: #f39c12;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #e67e22;
+    }
+    #prList {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    canvas {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" style="display: flex; flex-direction: column; align-items: center;">
+
+    <div class="card">
+      <h2 style="font-weight: bold; text-align: center;">Vücut Kompozisyonu Hesapla</h2>
+      <div class="input-group"><label>Boy (cm)</label><input type="number" id="height"></div>
+      <div class="input-group"><label>Kilo (kg)</label><input type="number" id="weight"></div>
+      <div class="input-group"><label>Yaş</label><input type="number" id="age"></div>
+      <div class="input-group"><label>Bel (cm)</label><input type="number" id="waist"></div>
+      <div class="input-group"><label>Kalça (cm)</label><input type="number" id="hip"></div>
+      <div class="input-group"><label>Boyun (cm)</label><input type="number" id="neck"></div>
+      <div class="input-group"><label>Omuz (cm)</label><input type="number" id="shoulder"></div>
+      <div class="input-group"><label>Göğüs (cm)</label><input type="number" id="chest"></div>
+      <div class="input-group"><label>Kol (cm)</label><input type="number" id="arm"></div>
+      <div class="input-group"><label>Bacak (cm)</label><input type="number" id="leg"></div>
+      <div class="input-group">
+        <label>Aktivite</label>
+        <select id="activity">
+          <option value="1.2">Hareketsiz</option>
+          <option value="1.375">Az Aktif</option>
+          <option value="1.55">Aktif</option>
+          <option value="1.725">Çok Aktif</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Cinsiyet</label>
+        <select id="gender">
+          <option value="male">Erkek</option>
+          <option value="female">Kadın</option>
+        </select>
+      </div>
+      <button onclick="calculateComposition()">HESAPLA</button>
+      <p id="compositionResult"></p>
+      <p id="bmrResult"></p>
+    </div>
+
+    <div class="card">
+      <h2 style="font-weight: bold; text-align: center;">PR Takip</h2>
+      <div class="input-group"><label>Egzersiz</label><input type="text" id="exercise"></div>
+      <div class="input-group"><label>Ağırlık (kg)</label><input type="number" id="prWeight"></div>
+      <div class="input-group"><label>Tekrar</label><input type="number" id="reps"></div>
+      <div class="input-group"><label>Set</label><input type="number" id="sets"></div>
+      <button onclick="savePR()">KAYDET</button>
+      <ul id="prList"></ul>
+      <canvas id="prChart" height="150"></canvas>
+    </div>
+
+    <div class="card">
+      <h2 style="font-weight: bold; text-align: center;">Antrenman Takvimi</h2>
+      <button onclick="logWorkout()">Antrenmana Başla</button>
+      <ul id="calendarList"></ul>
+      <button onclick="resetUser()">Yeni Kullanıcı Başlat</button>
+    
+    <div class="card">
+      <h2>Antrenman Planlayıcı</h2>
+      <div class="input-group">
+        <label for="muscleGroup">Kas Grubu Seç</label>
+        <select id="muscleGroup" onchange="generateWorkout()">
+          <option value="">Seçiniz</option>
+          <option value="gogus">Göğüs</option>
+          <option value="sirt">Sırt</option>
+          <option value="omuz">Omuz</option>
+          <option value="biceps">Biceps</option>
+          <option value="triceps">Triceps</option>
+          <option value="bacak">Bacak</option>
+          <option value="karin">Karın</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="workoutLevel">Seviye</label>
+        <select id="workoutLevel" onchange="generateWorkout()">
+          <option value="">Seçiniz</option>
+          <option value="hafif">Hafif (3x15)</option>
+          <option value="orta">Orta (4x10-12)</option>
+          <option value="pro">Profesyonel (5x6-10)</option>
+          <option value="karma">Karma</option>
+        </select>
+      </div>
+      <ul id="workoutPlan"></ul>
+    </div>
+
+  </div>
+
+  <script>
+    function calculateComposition() {
+      const weight = parseFloat(document.getElementById("weight").value);
+      const height = parseFloat(document.getElementById("height").value);
+      const waist = parseFloat(document.getElementById("waist").value);
+      const neck = parseFloat(document.getElementById("neck").value);
+      const hip = parseFloat(document.getElementById("hip").value);
+      const gender = document.getElementById("gender").value;
+      const age = parseFloat(document.getElementById("age").value);
+      const activity = parseFloat(document.getElementById("activity").value);
+
+      const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
+      let fat = 0;
+
+      if (gender === "male") {
+        fat = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+      } else {
+        fat = 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.221 * Math.log10(height)) - 450;
+      }
+
+      fat = fat.toFixed(1);
+
+      const bmr = gender === "male"
+        ? 10 * weight + 6.25 * height - 5 * age + 5
+        : 10 * weight + 6.25 * height - 5 * age - 161;
+      const tdee = Math.round(bmr * activity);
+
+      document.getElementById("compositionResult").innerText = `BMI: ${bmi} | Yağ Oranı: %${fat}`;
+      document.getElementById("bmrResult").innerText = `TDEE: ${tdee} kcal`;
+    }
+
+    const prList = JSON.parse(localStorage.getItem('prData') || '[]');
+    const prListEl = document.getElementById("prList");
+    const chartCtx = document.getElementById("prChart").getContext("2d");
+    let chart;
+
+    function savePR() {
+      const name = document.getElementById("exercise").value;
+      const weight = parseFloat(document.getElementById("prWeight").value);
+      const reps = parseInt(document.getElementById("reps").value);
+      const sets = parseInt(document.getElementById("sets").value);
+      const date = new Date().toLocaleDateString();
+
+      if (!name || !weight || !reps || !sets) return;
+
+      const entry = { name, weight, reps, sets, date };
+      prList.push(entry);
+      localStorage.setItem("prData", JSON.stringify(prList));
+
+      renderPRList();
+      renderChart();
+    }
+
+    function renderPRList() {
+      prListEl.innerHTML = "";
+      prList.forEach(pr => {
+        const li = document.createElement("li");
+        li.textContent = `${pr.date} - ${pr.name} | ${pr.sets}x${pr.reps} @ ${pr.weight}kg`;
+        prListEl.appendChild(li);
+      });
+    }
+
+    function renderChart() {
+      const labels = prList.map(pr => `${pr.date} (${pr.name})`);
+      const weights = prList.map(pr => pr.weight);
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(chartCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Ağırlık (kg)',
+            data: weights,
+            borderColor: '#f39c12',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3,
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    function logWorkout() {
+      const note = document.getElementById("workoutNote").value.trim();
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("tr-TR");
+      const month = now.toLocaleDateString("tr-TR", { year: 'numeric', month: 'long' });
+      const workoutData = JSON.parse(localStorage.getItem("workoutCalendarV2") || "[]");
+
+      workoutData.push({ date: dateStr, month, note });
+      localStorage.setItem("workoutCalendarV2", JSON.stringify(workoutData));
+      document.getElementById("workoutNote").value = "";
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const workoutData = JSON.parse(localStorage.getItem("workoutCalendarV2") || "[]");
+      const list = document.getElementById("calendarList");
+      list.innerHTML = "";
+
+      const grouped = {};
+      workoutData.forEach(entry => {
+        if (!grouped[entry.month]) grouped[entry.month] = [];
+        grouped[entry.month].push(entry);
+      });
+
+      const months = Object.keys(grouped).sort((a, b) => new Date("1 " + b) - new Date("1 " + a));
+      months.forEach(month => {
+        const count = grouped[month].length;
+        const notes = grouped[month].map(e => `📅 ${e.date}${e.note ? " — 📝 " + e.note : ""}`).join("\n");
+        const li = document.createElement("li");
+        li.textContent = `📅 ${month} – ${count} antrenman\n${notes}`;
+        list.appendChild(li);
+      });
+    }
+
+    renderPRList();
+    renderChart();
+    renderCalendar();
+  
+    const muscleExercises = {
+      gogus: ["Bench Press", "Incline Dumbbell Press", "Chest Fly", "Cable Crossover", "Push-Ups", "Decline Press", "Machine Press", "Dips", "Squeeze Press", "Smith Machine Press"],
+      sirt: ["Pull-Up", "Lat Pulldown", "Barbell Row", "T-Bar Row", "Seated Row", "Deadlift", "Dumbbell Row", "Face Pull", "Straight Arm Pulldown", "Chin-Up"],
+      omuz: ["Shoulder Press", "Lateral Raise", "Front Raise", "Rear Delt Fly", "Arnold Press", "Cable Lateral Raise", "Upright Row", "Dumbbell Press", "Face Pull", "Machine Shoulder Press"],
+      biceps: ["Barbell Curl", "Dumbbell Curl", "Hammer Curl", "Preacher Curl", "Concentration Curl", "Cable Curl", "Zottman Curl", "Incline Curl", "Reverse Curl", "EZ Bar Curl"],
+      triceps: ["Skullcrusher", "Triceps Pushdown", "Overhead Extension", "Dips", "Close-Grip Bench", "Kickbacks", "Rope Extension", "One Arm Pushdown", "Diamond Push-Up", "Machine Triceps Press"],
+      bacak: ["Squat", "Leg Press", "Lunges", "Leg Curl", "Leg Extension", "Bulgarian Split Squat", "Romanian Deadlift", "Glute Bridge", "Calf Raise", "Hack Squat"],
+      karin: ["Crunch", "Plank", "Leg Raise", "Bicycle Crunch", "Russian Twist", "Hanging Leg Raise", "Cable Crunch", "Mountain Climber", "Ab Wheel Rollout", "Toe Touch"]
+    };
+
+    function generateWorkout() {
+      const group = document.getElementById("muscleGroup").value;
+      const level = document.getElementById("workoutLevel").value;
+      const planList = document.getElementById("workoutPlan");
+
+      if (!group || !level) return;
+
+      const moves = muscleExercises[group];
+      let moveCount = level === "hafif" ? 4 : level === "orta" ? 6 : level === "pro" ? 8 : 6;
+      let setRep = level === "hafif" ? "3x15" : level === "orta" ? "4x10-12" : level === "pro" ? "5x6-10" : "3-5 set / 6-15 tekrar";
+
+      planList.innerHTML = "";
+      for (let i = 0; i < moveCount; i++) {
+        const li = document.createElement("li");
+        li.textContent = `${moves[i]} - ${setRep}`;
+        planList.appendChild(li);
+      }
+    }
+    
+    function resetUser() {
+      if (confirm("Tüm veriler silinecek. Emin misiniz?")) {
+        localStorage.removeItem("prData");
+        localStorage.removeItem("workoutCalendarV2");
+        location.reload();
+      }
+    }
+
+</script>
+</body>
+</html>
